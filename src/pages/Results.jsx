@@ -47,7 +47,11 @@ export default function Results() {
       return { ...r, overBudget: ob,
         score: ob ? Math.max(10, r.score - 45) : r.score,
         status: ob && r.status === 'great' ? 'worth' : r.status };
-    }).sort((a, b) => order[a.status] - order[b.status] || a.overBudget - b.overBudget || b.score - a.score || a.id.localeCompare(b.id));
+    }).sort((a, b) => {
+      const viable = r => (r.status === 'great' || r.status === 'worth') ? 1 : 0;
+      return viable(b) - viable(a) || a.overBudget - b.overBudget || (b.goalMatch - a.goalMatch)
+        || order[a.status] - order[b.status] || b.score - a.score || a.id.localeCompare(b.id);
+    });
   }, [results, specsCache]);
   const top = ranked.slice(0, 3);
   const rest = ranked.slice(3);

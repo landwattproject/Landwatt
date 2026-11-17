@@ -191,8 +191,9 @@ export function projectFriendly(id, lang = 'en') {
 }
 
 // Reasons/cautions derived from the actual land data — R() picks Thai when lang==='th'
-function reasonsFor(projectId, land, lang = 'en') {
+function reasonsFor(projectId, land, lang = 'en', goals = {}) {
   const areaRai = land.areaSqM / 1600;
+  const aims = goals.aims || [];
   const ghi = land.provinceData?.ghi || 5.0;
   const R = (en, th) => (lang === 'th' ? th : en);
   const reasons = [];
@@ -212,6 +213,10 @@ function reasonsFor(projectId, land, lang = 'en') {
       if (ghi >= 5.0) reasons.push(R(`Good sun here (avg irradiance ${ghi} kWh/m²/day) — even a few panels produce useful power`, `แดดดีที่นี่ (เฉลี่ย ${ghi} kWh/ตร.ม./วัน) — แผงไม่กี่แผงก็ได้ไฟใช้จริง`));
       reasons.push(R('The system is sized to your budget — start small and expand later if it works', 'ขนาดระบบตามงบของคุณ — เริ่มเล็กแล้วค่อยขยายถ้าเห็นผล'));
       if (areaRai < 0.5) reasons.push(R('Works on a small plot or rooftop where utility-scale options do not fit', 'ทำได้บนแปลงเล็กหรือหลังคา ที่โครงการใหญ่ลงไม่ได้'));
+      if (aims.includes('save') && goals.monthlyBill >= 10000)
+        reasons.push(R(`Your stated bill (~${goals.monthlyBill.toLocaleString()} THB/month) gives self-consumption real value`, `ค่าไฟที่ระบุ (~${goals.monthlyBill.toLocaleString()} บาท/เดือน) ทำให้การผลิตใช้เองคุ้มจริง`));
+      if (aims.includes('save') && goals.monthlyBill && goals.monthlyBill <= 3000)
+        cautions.push(R('Your stated bill is low (~3,000 THB or less) — solar payback will be slow', 'ค่าไฟที่ระบุต่ำ (~3,000 บาทหรือน้อยกว่า) — โซลาร์คืนทุนช้า'));
       cautions.push(R('Savings depend on how much power you actually use during daylight hours', 'ความคุ้มขึ้นกับว่าใช้ไฟช่วงกลางวันมากแค่ไหน'));
       cautions.push(R('Ask the utility (PEA/MEA) about rules for connecting a small system to the meter', 'ถามการไฟฟ้า (กฟภ./กฟน.) เรื่องกฎการต่อระบบเล็กเข้ามิเตอร์'));
       break;
@@ -225,6 +230,10 @@ function reasonsFor(projectId, land, lang = 'en') {
     case 'ev-moto-swap':
       reasons.push(R('Small footprint — a road-frontage corner is enough for a swap kiosk', 'ใช้พื้นที่น้อย — มุมแปลงติดถนนก็วางตู้สลับแบตได้'));
       if (land.roadType === 'main') reasons.push(R('Passing traffic on a main road — where swap riders actually look for cabinets', 'รถผ่านบนถนนใหญ่ — จุดที่ผู้ขี่มอไซค์ไฟฟ้ามองหาตู้สลับจริง'));
+      if (aims.includes('ev') && goals.evTraffic === 'high')
+        reasons.push(R('You flagged heavy traffic — supports swap demand', 'คุณระบุรถผ่านหนาแน่น — หนุนดีมานด์สลับแบต'));
+      if (aims.includes('ev') && goals.evTraffic === 'low')
+        cautions.push(R('You flagged a quiet road — swap demand may be thin', 'คุณระบุถนนค่อนข้างเงียบ — ดีมานด์สลับแบตอาจบาง'));
       reasons.push(R('A real per-transaction business, not just power sales', 'เป็นธุรกิจเก็บเงินต่อครั้งจริง ไม่ใช่แค่ขายไฟ'));
       cautions.push(R('Revenue depends entirely on e-motorcycle riders nearby — count them before buying hardware', 'รายได้ขึ้นกับผู้ขี่มอไซค์ไฟฟ้าในละแวกนั้นล้วน ๆ — นับจริงก่อนซื้ออุปกรณ์'));
       cautions.push(R('Ask swap-network operators about partner/franchise terms — they set the fee per swap', 'ถามเงื่อนไขพาร์ตเนอร์/แฟรนไชส์จากผู้ให้บริการเครือข่ายสลับ — เขากำหนดค่าธรรมเนียมต่อครั้ง'));
@@ -248,6 +257,10 @@ function reasonsFor(projectId, land, lang = 'en') {
       if (land.roadWidthMeters >= 10) reasons.push(R('Wide frontage road allows easy vehicle entry and drive aisles', 'ถนนหน้าแปลงกว้าง รถเลี้ยวเข้าและวงเวียนในแปลงได้สบาย'));
       if ((land.provinceData?.evPotential || 0) >= 0.85) reasons.push(R(`${land.provinceData?.nameEn || land.provinceData?.name} has relatively high EV adoption`, `${land.provinceData?.name || land.provinceData?.nameEn} มี EV ใช้งานค่อนข้างมาก`));
       if (areaRai >= 1) reasons.push(R('Enough space for chargers, parking and a rest area', 'พื้นที่พอสำหรับเครื่องชาร์จ ที่จอด และจุดพัก'));
+      if (aims.includes('ev') && goals.evTraffic === 'high')
+        reasons.push(R('You flagged heavy traffic — supports charging demand', 'คุณระบุรถผ่านหนาแน่น — หนุนดีมานด์การชาร์จ'));
+      if (aims.includes('ev') && goals.evTraffic === 'low')
+        cautions.push(R('You flagged a quiet road — charging demand may be thin', 'คุณระบุถนนค่อนข้างเงียบ — ดีมานด์ชาร์จอาจบาง'));
       cautions.push(R('Revenue depends on actual traffic — survey vehicle counts at the site before deciding', 'รายได้ขึ้นกับรถจริงที่ผ่าน — นับปริมาณรถหน้างานก่อนตัดสินใจ'));
       cautions.push(R('Charging demand and grid hosting capacity are unverified — the entered line distance is only an estimate; contact the utility', 'ความต้องการชาร์จและกำลังรับของสายยังไม่ยืนยัน — ระยะสายที่กรอกเป็นแค่ประมาณการ ติดต่อการไฟฟ้าให้แน่ใจ'));
       if (land.roadType !== 'main') cautions.push(R('Not on a main road — customer location needs more thought', 'ไม่ได้อยู่บนถนนใหญ่ — ต้องคิดเรื่องหาลูกค้าเพิ่ม'));
@@ -521,35 +534,47 @@ function screening(projectId, land, goals, lang = 'en') {
   return null;
 }
 
-// Score adjustment by user goals
-function goalBoost(projectId, aims) {
+// Score adjustment by user goals. 'unsure' is neutral — it means "no preference",
+// not a real goal, so it must not bias the ranking. Optional wizard conditions
+// (monthly bill, EV traffic) nudge inside the goal fit.
+function goalBoost(projectId, aims, goals = {}) {
   const map = {
-    'solar-farm': ['income', 'save', 'unsure'],
-    'small-solar': ['save', 'backup', 'income', 'unsure'],
-    'solar-utility-kit': ['backup', 'save', 'unsure'],
-    'ev-moto-swap': ['income', 'ev', 'unsure', 'shop'],
-    'solar-coldroom': ['income', 'farm', 'unsure'],
-    'solar-dryer': ['income', 'farm', 'unsure'],
+    'solar-farm': ['income'],
+    'small-solar': ['save', 'backup', 'income'],
+    'solar-utility-kit': ['backup', 'save'],
+    'ev-moto-swap': ['ev', 'income', 'shop'],
+    'solar-coldroom': ['income', 'farm'],
+    'solar-dryer': ['income', 'farm'],
     'ev-charging-hub': ['ev', 'income'],
     'agrivoltaics': ['farm', 'income'],
-    'grid-bess': ['backup'],
+    'grid-bess': ['backup', 'save', 'income'],
     'floating-solar': ['income'],
     'biomass-biogas': ['farm', 'income'],
-    'solar-lease': ['income', 'unsure', 'rental'],
+    'solar-lease': ['income', 'rental'],
     'data-center-lease': ['income', 'rental'],
-    'solar-warehouse': ['income', 'ev', 'rental'],
-    'carbon-forest': ['income', 'farm', 'unsure'],
-    'roadside-cafe': ['business', 'shop', 'income'],
-    'minimart': ['business', 'shop', 'income'],
-    'self-storage': ['business', 'rental', 'income', 'unsure'],
-    'sports-court': ['business', 'rental', 'income'],
-    'homestay-camp': ['business', 'stay', 'income', 'unsure'],
-    'laundry-shop': ['business', 'shop', 'income'],
-    'car-wash': ['business', 'shop', 'income'],
+    'solar-warehouse': ['income', 'rental'],
+    'carbon-forest': ['income', 'farm'],
+    'roadside-cafe': ['shop', 'income'],
+    'minimart': ['shop', 'income'],
+    'self-storage': ['rental', 'income'],
+    'sports-court': ['rental', 'income'],
+    'homestay-camp': ['stay', 'income'],
+    'laundry-shop': ['shop', 'income'],
+    'car-wash': ['shop', 'income'],
   };
-  if (!aims.length) return 0;
-  const matched = (map[projectId] || []).some(a => aims.includes(a));
-  return matched ? 12 : -8;
+  const concrete = (aims || []).filter(a => a !== 'unsure');
+  if (!concrete.length) return 0;
+  const matched = (map[projectId] || []).some(a => concrete.includes(a));
+  let d = matched ? 12 : -8;
+  if (concrete.includes('ev') && (projectId === 'ev-charging-hub' || projectId === 'ev-moto-swap')) {
+    if (goals.evTraffic === 'high') d += 4;
+    else if (goals.evTraffic === 'low') d -= 4;
+  }
+  if (concrete.includes('save') && projectId === 'small-solar') {
+    if (goals.monthlyBill >= 10000) d += 4;
+    else if (goals.monthlyBill && goals.monthlyBill <= 3000) d -= 4;
+  }
+  return d;
 }
 
 // Confidence level of the data used for evaluation
@@ -571,19 +596,25 @@ export function recommendProjects(land, goals, lang = 'en') {
 
   const results = Object.keys(PROJECT_FRIENDLY).map(id => {
     const screened = screening(id, land, goals, lang);
-    let score = Math.round(Math.min(98, Math.max(10, (raw[id] || 50) + goalBoost(id, aims))));
+    const boost = goalBoost(id, aims, goals);
+    const goalMatch = boost > 0;
+    let score = Math.round(Math.min(98, Math.max(10, (raw[id] || 50) + boost)));
     // Missing data keeps scores under a confidence ceiling — soft-compressed
     // instead of flat-clamped so relative ranking survives
     const scoreCap = confidence.level === 'Low' ? 70 : confidence.level === 'Medium' ? 85 : 98;
     if (score > scoreCap) score = scoreCap + Math.round((score - scoreCap) * 0.25);
     let status = screened?.status || (score >= 72 ? 'great' : score >= 52 ? 'worth' : score >= 38 ? 'insufficient' : 'no');
     if (confidence.level === 'Low' && status === 'great') status = 'worth';
-    const { reasons, cautions } = reasonsFor(id, land, lang);
+    const { reasons, cautions } = reasonsFor(id, land, lang, goals);
     if (screened?.blockReason) reasons.unshift(screened.blockReason);
-    return { id, score, status, reasons, cautions, confidence };
+    return { id, score, status, reasons, cautions, confidence, goalMatch };
   }).sort((a, b) => {
     const order = { great: 0, worth: 1, insufficient: 2, no: 3 };
-    return order[a.status] - order[b.status] || b.score - a.score || a.id.localeCompare(b.id); // tie-break deterministic
+    const viable = r => (r.status === 'great' || r.status === 'worth') ? 1 : 0;
+    return viable(b) - viable(a)               // buildable options always lead
+      || (b.goalMatch - a.goalMatch)           // matching the user's goal next
+      || order[a.status] - order[b.status]
+      || b.score - a.score || a.id.localeCompare(b.id); // tie-break deterministic
   });
 
   return results;
