@@ -49,12 +49,18 @@ export default function Results() {
         status: ob && r.status === 'great' ? 'worth' : r.status };
     }).sort((a, b) => {
       const viable = r => (r.status === 'great' || r.status === 'worth') ? 1 : 0;
-      return viable(b) - viable(a) || a.overBudget - b.overBudget || (b.goalMatch - a.goalMatch)
+      return viable(b) - viable(a) || (b.goalMatch - a.goalMatch) || a.overBudget - b.overBudget
         || order[a.status] - order[b.status] || b.score - a.score || a.id.localeCompare(b.id);
     });
   }, [results, specsCache]);
   const top = ranked.slice(0, 3);
   const rest = ranked.slice(3);
+
+  // If every option matching the user's goal failed screening, say so up front —
+  // otherwise the picked goal silently disappears from the top ranks.
+  const blockedMatches = ranked.filter(r => r.goalMatch && (r.status === 'insufficient' || r.status === 'no'));
+  const hasViableMatch = ranked.some(r => r.goalMatch && (r.status === 'great' || r.status === 'worth'));
+  const showMatchNotice = blockedMatches.length > 0 && !hasViableMatch;
 
   if (analyzing) {
     return (
@@ -114,6 +120,20 @@ export default function Results() {
       <p className="text-sm text-ink-soft mt-1.5 mb-6">
         {t('Suitability scores come from system criteria on your inputs — not profit odds or a guarantee of success')}
       </p>
+
+      {showMatchNotice && (
+        <div className="mb-6">
+          <Note type="warn">
+            <div className="font-semibold">{t('Your selected goal does not fit this plot yet')}</div>
+            <ul className="mt-1.5 space-y-1">
+              {blockedMatches.map(r => (
+                <li key={r.id}><strong>{projectFriendly(r.id, lang).name}</strong> — {r.reasons[0] || r.cautions[0]}</li>
+              ))}
+            </ul>
+            <div className="mt-2">{t('The options below are the ones that fit this plot\u2019s conditions instead')}</div>
+          </Note>
+        </div>
+      )}
 
       <div className="space-y-4">
         {top.map((r, idx) => {

@@ -1,6 +1,7 @@
 // Goal-fit: rankings must follow the user's selected goals and conditions.
 import assert from 'node:assert/strict';
-import { recommendProjects, GOAL_OPTIONS } from '../src/engine/recommend.js';
+import { recommendProjects, GOAL_OPTIONS, BUDGET_MAX_THB } from '../src/engine/recommend.js';
+import { getSpecs } from '../src/engine/specs.js';
 
 const land = {
   areaSqM: 8000, provinceId: 'korat',
@@ -13,6 +14,23 @@ const land = {
 
 const rec = aims => recommendProjects(land, { aims, budget: 'unsure' });
 const top1 = aims => rec(aims)[0].id;
+
+// Mirror of the Results.jsx re-rank: over-budget plans get -45 (min 10) and
+// great→worth, then viable → goalMatch → overBudget → status → score → id.
+const rankedLikeUI = (goals) => {
+  const max = BUDGET_MAX_THB[goals.budget];
+  const order = { great: 0, worth: 1, insufficient: 2, no: 3 };
+  return recommendProjects(land, goals).map(r => {
+    const ob = !!getSpecs(r.id, land, max)?.budgetFit?.stillOverBudget;
+    return { ...r, overBudget: ob,
+      score: ob ? Math.max(10, r.score - 45) : r.score,
+      status: ob && r.status === 'great' ? 'worth' : r.status };
+  }).sort((a, b) => {
+    const v = r => (r.status === 'great' || r.status === 'worth') ? 1 : 0;
+    return v(b) - v(a) || (b.goalMatch - a.goalMatch) || a.overBudget - b.overBudget
+      || order[a.status] - order[b.status] || b.score - a.score || a.id.localeCompare(b.id);
+  });
+};
 
 // Every concrete goal: the #1 pick must match that goal (goalMatch flag on).
 const EXPECTED_TOP1 = {
@@ -76,5 +94,40 @@ assert.ok(withBill.reasons.some(x => x.includes('45,000')), 'small-solar reason 
 const withTraffic = recommendProjects(land, { aims: ['ev'], evTraffic: 'high', budget: 'unsure' })
   .find(r => r.id === 'ev-charging-hub');
 assert.ok(withTraffic.reasons.some(x => x.includes('traffic')), 'ev reason should cite flagged traffic');
+
+// Regression: picking EV with a small budget must still surface EV first —
+// an over-budget match leads (with its warning) ahead of affordable non-matches.
+for (const budget of ['under-50k', '150-500k', '2-5m', 'unsure']) {
+  const ids = rankedLikeUI({ aims: ['ev'], budget }).slice(0, 3).map(r => r.id);
+  assert.ok(ids.includes('ev-charging-hub') || ids.includes('ev-moto-swap'),
+    `ev goal + budget '${budget}': an EV project must be top-3, got ${ids}`);
+}
+// Same for a cheap-goal sanity check: shop goal + mid budget → storefront leads.
+{
+  const ids = rankedLikeUI({ aims: ['shop'], budget: '150-500k' }).slice(0, 3).map(r => r.id);
+  assert.ok(ids.every(id => SHOP.has(id)), `shop + 150-500k: top-3 must be storefronts, got ${ids}`);
+}
+
+// Blocked goal: EV on a dirt road screens every EV option out — each must
+// carry a block reason so the UI notice can explain why the pick vanished.
+{
+  const dirt = { ...land, roadType: 'dirt' };
+  const res = recommendProjects(dirt, { aims: ['ev'], budget: 'unsure' });
+  const matched = res.filter(r => r.goalMatch);
+  assert.ok(matched.length > 0, 'ev matches must exist');
+  assert.ok(matched.every(r => r.status === 'insufficient' || r.status === 'no'),
+    `ev on dirt road: all matches should be non-viable, got ${matched.map(r => r.id + ':' + r.status)}`);
+  assert.ok(matched.every(r => r.reasons.length > 0),
+    'blocked matches must carry a reason for the UI notice');
+  assert.ok(!res.slice(0, 3).some(r => r.goalMatch),
+    'blocked matches must not occupy top-3');
+}
+// Same contract for stay-on-pond (homestay needs dry land).
+{
+  const pond = { ...land, landType: 'pond', hasWaterBody: true };
+  const matched = recommendProjects(pond, { aims: ['stay'], budget: 'unsure' }).filter(r => r.goalMatch);
+  assert.ok(matched.every(r => r.status === 'insufficient' || r.status === 'no') && matched.every(r => r.reasons.length > 0),
+    'stay on pond: matched options must be non-viable with reasons');
+}
 
 console.log('GOAL-FIT: ALL CHECKS PASS');
