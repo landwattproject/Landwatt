@@ -16,7 +16,7 @@ const rec = aims => recommendProjects(land, { aims, budget: 'unsure' });
 const top1 = aims => rec(aims)[0].id;
 
 // Mirror of the Results.jsx re-rank: over-budget plans get -45 (min 10) and
-// great→worth, then viable → goalMatch → overBudget → status → score → id.
+// great→worth, then goalMatch → viable → overBudget → status → score → id.
 const rankedLikeUI = (goals) => {
   const max = BUDGET_MAX_THB[goals.budget];
   const order = { great: 0, worth: 1, insufficient: 2, no: 3 };
@@ -27,7 +27,7 @@ const rankedLikeUI = (goals) => {
       status: ob && r.status === 'great' ? 'worth' : r.status };
   }).sort((a, b) => {
     const v = r => (r.status === 'great' || r.status === 'worth') ? 1 : 0;
-    return v(b) - v(a) || (b.goalMatch - a.goalMatch) || a.overBudget - b.overBudget
+    return (b.goalMatch - a.goalMatch) || v(b) - v(a) || a.overBudget - b.overBudget
       || order[a.status] - order[b.status] || b.score - a.score || a.id.localeCompare(b.id);
   });
 };
@@ -119,8 +119,10 @@ for (const budget of ['under-50k', '150-500k', '2-5m', 'unsure']) {
     `ev on dirt road: all matches should be non-viable, got ${matched.map(r => r.id + ':' + r.status)}`);
   assert.ok(matched.every(r => r.reasons.length > 0),
     'blocked matches must carry a reason for the UI notice');
-  assert.ok(!res.slice(0, 3).some(r => r.goalMatch),
-    'blocked matches must not occupy top-3');
+  // picked-but-blocked options still surface at the top of the list, flagged
+  // non-viable, so the user sees their pick and why it failed
+  assert.ok(res[0].goalMatch && (res[0].status === 'insufficient' || res[0].status === 'no'),
+    `blocked pick should lead flagged non-viable, got ${res[0].id}:${res[0].status}`);
 }
 // Same contract for stay-on-pond (homestay needs dry land).
 {

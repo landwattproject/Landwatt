@@ -611,8 +611,8 @@ export function recommendProjects(land, goals, lang = 'en') {
   }).sort((a, b) => {
     const order = { great: 0, worth: 1, insufficient: 2, no: 3 };
     const viable = r => (r.status === 'great' || r.status === 'worth') ? 1 : 0;
-    return viable(b) - viable(a)               // buildable options always lead
-      || (b.goalMatch - a.goalMatch)           // matching the user's goal next
+    return (b.goalMatch - a.goalMatch)         // the user's picked options first — even blocked ones, flagged with their reason
+      || viable(b) - viable(a)
       || order[a.status] - order[b.status]
       || b.score - a.score || a.id.localeCompare(b.id); // tie-break deterministic
   });
