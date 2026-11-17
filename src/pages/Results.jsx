@@ -114,11 +114,11 @@ export default function Results() {
 
       {blockedMatches.length > 0 && (
         <div className="card p-5 mb-6 border-volt-200">
-          <h2 className="text-base font-semibold flex items-center gap-2">
-            <AlertTriangle className="w-4 h-4 text-volt-700" />
+          <h2 className="text-lg sm:text-xl font-bold flex items-center gap-2.5">
+            <AlertTriangle className="w-5 h-5 text-volt-700" />
             {t('Your picks — not yet suitable for this plot')}
           </h2>
-          <p className="text-xs text-ink-faint mt-1">
+          <p className="text-sm text-ink-faint mt-1">
             {t('Shown separately from the recommended options — each with the reason it does not fit')}
           </p>
           <div className="space-y-3 pt-3">

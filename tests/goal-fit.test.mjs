@@ -132,4 +132,13 @@ for (const budget of ['under-50k', '150-500k', '2-5m', 'unsure']) {
     'stay on pond: matched options must be non-viable with reasons');
 }
 
+// The picks section must only contain what the user actually picked:
+// grid-bess screens itself as needing backup/income aims — it must not
+// surface as a goal match for 'save' alone.
+{
+  const matched = recommendProjects(land, { aims: ['save', 'ev'], budget: 'unsure' }).filter(r => r.goalMatch);
+  assert.ok(!matched.some(r => r.id === 'grid-bess'),
+    'grid-bess must not match save+ev — its own screening requires backup/income aims');
+}
+
 console.log('GOAL-FIT: ALL CHECKS PASS');

@@ -547,7 +547,7 @@ function goalBoost(projectId, aims, goals = {}) {
     'solar-dryer': ['income', 'farm'],
     'ev-charging-hub': ['ev', 'income'],
     'agrivoltaics': ['farm', 'income'],
-    'grid-bess': ['backup', 'save', 'income'],
+    'grid-bess': ['backup', 'income'],
     'floating-solar': ['income'],
     'biomass-biogas': ['farm', 'income'],
     'solar-lease': ['income', 'rental'],
