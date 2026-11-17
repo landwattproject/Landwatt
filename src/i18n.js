@@ -184,8 +184,8 @@ export const TH = {
   'Found {n} options that passed initial screening': 'เจอ {n} ทางเลือกที่ผ่านการคัดเบื้องต้น',
   'Suitability scores come from system criteria on your inputs — not profit odds or a guarantee of success':
     'คะแนนความเหมาะมาจากเกณฑ์ของระบบตามข้อมูลที่ให้ — ไม่ใช่โอกาสกำไรหรือการันตีความสำเร็จ',
-  'Your selected goal does not fit this plot yet': 'ตัวเลือกที่ตรงเป้าหมายของคุณยังไม่เหมาะกับแปลงนี้',
-  'The options below are the ones that fit this plot\u2019s conditions instead': 'ด้านล่างเป็นทางเลือกที่เหมาะกับเงื่อนไขของแปลงนี้แทน',
+  'Your picks — not yet suitable for this plot': 'ตัวเลือกที่คุณเลือก — ยังไม่เหมาะกับแปลงนี้',
+  'Shown separately from the recommended options — each with the reason it does not fit': 'แยกออกจากทางเลือกที่ระบบแนะนำ — แต่ละตัวพร้อมเหตุผลที่ยังไม่เหมาะ',
   'Best fit right now': 'เหมาะที่สุดตอนนี้',
   'Suitability': 'ความเหมาะ',
   'why this score?': 'ทำไมได้คะแนนนี้?',

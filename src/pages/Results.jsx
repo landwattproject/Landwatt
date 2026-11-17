@@ -53,14 +53,12 @@ export default function Results() {
         || order[a.status] - order[b.status] || b.score - a.score || a.id.localeCompare(b.id);
     });
   }, [results, specsCache]);
-  const top = ranked.slice(0, 3);
-  const rest = ranked.slice(3);
-
-  // If every option matching the user's goal failed screening, say so up front —
-  // otherwise the picked goal silently disappears from the top ranks.
+  // Picked-but-blocked options live in their own section — separate from the
+  // recommended ranking, each with the reason it does not fit.
   const blockedMatches = ranked.filter(r => r.goalMatch && (r.status === 'insufficient' || r.status === 'no'));
-  const hasViableMatch = ranked.some(r => r.goalMatch && (r.status === 'great' || r.status === 'worth'));
-  const showMatchNotice = blockedMatches.length > 0 && !hasViableMatch;
+  const mainRanked = ranked.filter(r => !blockedMatches.includes(r));
+  const top = mainRanked.slice(0, 3);
+  const rest = mainRanked.slice(3);
 
   if (analyzing) {
     return (
@@ -121,17 +119,37 @@ export default function Results() {
         {t('Suitability scores come from system criteria on your inputs — not profit odds or a guarantee of success')}
       </p>
 
-      {showMatchNotice && (
-        <div className="mb-6">
-          <Note type="warn">
-            <div className="font-semibold">{t('Your selected goal does not fit this plot yet')}</div>
-            <ul className="mt-1.5 space-y-1">
-              {blockedMatches.map(r => (
-                <li key={r.id}><strong>{projectFriendly(r.id, lang).name}</strong> — {r.reasons[0] || r.cautions[0]}</li>
-              ))}
-            </ul>
-            <div className="mt-2">{t('The options below are the ones that fit this plot\u2019s conditions instead')}</div>
-          </Note>
+      {blockedMatches.length > 0 && (
+        <div className="card p-5 mb-6 border-volt-200">
+          <h2 className="text-base font-semibold flex items-center gap-2">
+            <AlertTriangle className="w-4 h-4 text-volt-700" />
+            {t('Your picks — not yet suitable for this plot')}
+          </h2>
+          <p className="text-xs text-ink-faint mt-1">
+            {t('Shown separately from the recommended options — each with the reason it does not fit')}
+          </p>
+          <div className="space-y-3 pt-3">
+            {blockedMatches.map(r => {
+              const meta = projectFriendly(r.id, lang);
+              return (
+                <div key={r.id} className="flex items-start gap-3 p-3.5 rounded-xl border border-volt-200 bg-volt-50/50">
+                  <ProjectIcon id={r.id} size="md" />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-sm font-semibold">{meta.name}</span>
+                      <StatusBadge status={r.status} />
+                      <span className="text-xs text-ink-faint font-medium">{r.score}/100</span>
+                    </div>
+                    <p className="text-sm text-ink-soft mt-1 leading-relaxed">{r.reasons[0] || meta.oneLiner}</p>
+                  </div>
+                  <button onClick={() => { setChosenPlan(r.id); navigate(`/plan/${r.id}`); }}
+                    className="text-sm font-medium text-brand-700 hover:underline flex-shrink-0 mt-1">
+                    {t('Details')}
+                  </button>
+                </div>
+              );
+            })}
+          </div>
         </div>
       )}
 
