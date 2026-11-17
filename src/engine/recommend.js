@@ -204,7 +204,7 @@ function reasonsFor(projectId, land, lang = 'en', goals = {}) {
       if (ghi >= 5.1) reasons.push(R(`Good sun here (avg irradiance ${ghi} kWh/m²/day) — well suited to solar generation`, `แดดดีที่นี่ (เฉลี่ย ${ghi} kWh/ตร.ม./วัน) — เหมาะกับการผลิตไฟโซลาร์`));
       if (areaRai >= 2) reasons.push(R(`${areaRai.toFixed(1)} rai is enough for panels plus maintenance access`, `${areaRai.toFixed(1)} ไร่ เพียงพอสำหรับแผงและทางเดินบำรุงรักษา`));
       if (land.landType === 'flat') reasons.push(R('You described the land as flat/open — good for laying out arrays (on-site shading not yet surveyed)', 'ที่ดินเป็นที่โล่ง/ราบ — วางแผงได้ง่าย (ยังไม่ได้สำรวจเงาบังหน้างาน)'));
-      if (land.hasShading === null) cautions.push(R('Shading (trees/buildings) not yet known — actual yield and usable area may be lower than estimated', 'ยังไม่ทราบเงาบัง (ต้นไม้/อาคาร) — ผลิตไฟและพื้นที่ใช้จริงอาจน้อยกว่าประเมิน'));
+      if (land.hasShading == null) cautions.push(R('Shading (trees/buildings) not yet known — actual yield and usable area may be lower than estimated', 'ยังไม่ทราบเงาบัง (ต้นไม้/อาคาร) — ผลิตไฟและพื้นที่ใช้จริงอาจน้อยกว่าประเมิน'));
       if (land.gridDistanceMeters > 500) cautions.push(R(`The grid connection is far (~${land.gridDistanceMeters} m) — line-extension costs may apply`, `จุดเชื่อมต่อไฟไกล (~${land.gridDistanceMeters} ม.) — อาจมีค่าดึงสายเพิ่ม`));
       if (areaRai < 2) cautions.push(R('Small plot — system size will be limited; better for self-consumption than commercial power sales', 'แปลงเล็ก — ขนาดระบบจำกัด เหมาะใช้ไฟเองมากกว่าขายไฟเชิงพาณิชย์'));
       cautions.push(R('Selling power to the utility requires an interconnection application and may face quota limits', 'การขายไฟให้การไฟฟ้าต้องยื่นขอเชื่อมต่อ และอาจติดโควตา'));
@@ -562,7 +562,10 @@ function goalBoost(projectId, aims, goals = {}) {
     'laundry-shop': ['shop', 'income'],
     'car-wash': ['shop', 'income'],
   };
-  const concrete = (aims || []).filter(a => a !== 'unsure');
+  // Ignore anything that is not a real current goal — 'unsure' means no
+  // preference, and stale ids from older drafts (e.g. 'trend') must not
+  // penalize every option uniformly.
+  const concrete = (aims || []).filter(a => a !== 'unsure' && GOAL_OPTIONS.some(o => o.id === a));
   if (!concrete.length) return 0;
   const matched = (map[projectId] || []).some(a => concrete.includes(a));
   let d = matched ? 12 : -8;

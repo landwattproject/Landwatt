@@ -121,7 +121,7 @@ export default function Results() {
           <p className="text-sm text-ink-faint mt-1">
             {t('Shown separately from the recommended options — each with the reason it does not fit')}
           </p>
-          <div className="space-y-3 pt-3">
+          <div className="space-y-3 pt-3 max-h-[420px] overflow-y-auto">
             {blockedMatches.map(r => {
               const meta = projectFriendly(r.id, lang);
               return (

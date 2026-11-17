@@ -141,4 +141,19 @@ for (const budget of ['under-50k', '150-500k', '2-5m', 'unsure']) {
     'grid-bess must not match save+ev — its own screening requires backup/income aims');
 }
 
+// Stale aims from older drafts (e.g. the removed 'trend' goal) must be neutral —
+// not a uniform -8 penalty on every option.
+{
+  const stale = recommendProjects(land, { aims: ['income', 'trend'], budget: 'unsure' });
+  const noStale = recommendProjects(land, { aims: ['income'], budget: 'unsure' });
+  assert.deepEqual(stale.map(r => r.id), noStale.map(r => r.id),
+    'stale aim ids must not change the ranking');
+  assert.deepEqual(stale.map(r => r.score), noStale.map(r => r.score),
+    'stale aim ids must not change scores');
+  const onlyStale = recommendProjects(land, { aims: ['trend'], budget: 'unsure' });
+  assert.ok(onlyStale.every(r => !r.goalMatch) && deepEqualIds(onlyStale, emptyRes),
+    'an unknown-only aims list must behave like no goals');
+}
+function deepEqualIds(a, b) { return JSON.stringify(a.map(r => r.id)) === JSON.stringify(b.map(r => r.id)); }
+
 console.log('GOAL-FIT: ALL CHECKS PASS');
