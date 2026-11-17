@@ -112,13 +112,6 @@ export default function Results() {
         )}
       </div>
 
-      <h1 className="text-xl sm:text-2xl font-bold">
-        {top.length >= 3 ? t('We found 3 options worth exploring for your land') : t(`Found {n} options that passed initial screening`).replace('{n}', top.length)}
-      </h1>
-      <p className="text-sm text-ink-soft mt-1.5 mb-6">
-        {t('Suitability scores come from system criteria on your inputs — not profit odds or a guarantee of success')}
-      </p>
-
       {blockedMatches.length > 0 && (
         <div className="card p-5 mb-6 border-volt-200">
           <h2 className="text-base font-semibold flex items-center gap-2">
@@ -152,6 +145,13 @@ export default function Results() {
           </div>
         </div>
       )}
+
+      <h1 className="text-xl sm:text-2xl font-bold">
+        {top.length >= 3 ? t('We found 3 options worth exploring for your land') : t(`Found {n} options that passed initial screening`).replace('{n}', top.length)}
+      </h1>
+      <p className="text-sm text-ink-soft mt-1.5 mb-6">
+        {t('Suitability scores come from system criteria on your inputs — not profit odds or a guarantee of success')}
+      </p>
 
       <div className="space-y-4">
         {top.map((r, idx) => {
